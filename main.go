@@ -34,8 +34,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot read input file: ", err)
 	}
+	inputSizeBytes := len(inputContent)
 
 	jsons := strings.Split(string(inputContent), "\n")
+
+	metricDpCount := 0
 
 	var msg []byte
 	if strings.HasPrefix(string(inputContent), "{\"resourceSpans\":") {
@@ -70,6 +73,7 @@ func main() {
 			}
 			request.Metrics().ResourceMetrics().MoveAndAppendTo(combined.Metrics().ResourceMetrics())
 		}
+		metricDpCount += combined.Metrics().DataPointCount()
 
 		// Marshal the request to bytes.
 		msg, err = combined.MarshalProto()
@@ -91,4 +95,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Cannot write file: ", err)
 	}
+
+	log.Printf(
+		"Datapoints converted %v. OTLP uncompressed bytes per datapoint %v\n",
+		metricDpCount, inputSizeBytes/metricDpCount,
+	)
 }
